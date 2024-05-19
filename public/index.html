@@ -1,0 +1,86 @@
+<html>
+<head>
+  <title>歷年價格查詢</title>
+  <link rel="stylesheet" href="/stylesheets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <h1>美光 Micron Crucial P3 Plus Gen4 NVMe 1TB SSD 固態硬碟 歷史價格</h1>
+    <p>可查詢範圍2022/08/12~2024/05/19</p>
+    <div class="search-area">
+      <!--給予使用者可以選擇開始和結束日期-->
+        <form id="search-from">
+            <label for="start">開始日期:</label>
+            <input type="date" id="start" name="start" value="2022-08-12" min="2022-08-12" max="2024-05-19">
+            <label for="end">結束日期:</label>
+            <input type="date" id="end" name="end" value="2024-05-19" min="2022-08-12" max="2024-05-19">
+            <input type="submit" value="查詢">
+        </form>
+    </div>
+    <div class="result">
+      <canvas id="myChart"></canvas>
+    </div>
+    <script>
+        //使用fetch取得資料
+        async function fetchData(start, end) {
+            const response = await fetch(`/api/searchbetween?start=${start}&end=${end}`);
+            console.log(response);
+            const data = await response.json();
+            return data;
+        }
+        // 保存當次的表格
+        let myChart;
+        //畫圖
+        async function drawChart(start, end) {
+            clearChart();
+            const data = await fetchData(start, end);
+            const ctx = document.getElementById('myChart').getContext('2d');
+            // 建立新的表格
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(item => item.date),
+                    datasets: [{
+                        label: '價格',
+                        data: data.map(item => item.price),
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        //清除舊的圖表
+        function clearChart() {
+          if (myChart) {
+            myChart.destroy();
+          }
+        }
+        //監聽表單送出事件
+        document.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const start = document.getElementById('start').value;
+            const end = document.getElementById('end').value;
+            // 若開始日期高於結束日期 取消本次操作且alert提示
+            if (document.getElementById('start').value > document.getElementById('end').value) {
+              alert('開始日期不可高於結束日期');
+              return false;
+            }
+            drawChart(start, end);
+        });
+
+        //一開始畫圖
+        drawChart('2022-08-12', '2024-05-19');
+
+    </script>
+</body>
+
+</html>
